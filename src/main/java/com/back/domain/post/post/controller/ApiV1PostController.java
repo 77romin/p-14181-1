@@ -38,14 +38,16 @@ public class ApiV1PostController {
 
         return items
                 .stream()
-                .map(PostDto::new) // PostDto로 변환
+                .map(PostDto::new)
                 .toList();
     }
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     @Operation(summary = "단건 조회")
-    public PostDto getItem(@PathVariable int id) {
+    public PostDto getItem(
+            @PathVariable int id
+    ) {
         Post post = postService.findById(id).get();
 
         return new PostDto(post);
@@ -54,17 +56,13 @@ public class ApiV1PostController {
     @DeleteMapping("/{id}")
     @Transactional
     @Operation(summary = "삭제")
-    public RsData<Void> delete(
-            @PathVariable int id,
-            @NotBlank @Size(min = 30, max = 50) @RequestHeader("Authorization") String authorization
-    ) {
-        String apiKey = authorization.replace("Bearer ", "");
-        Member actor = memberService.findByApiKey(apiKey).orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 apiKey 입니다."));
+    public RsData<Void> delete(@PathVariable int id) {
+        Member actor = rq.getActor();
 
         Post post = postService.findById(id).get();
 
         if (!actor.equals(post.getAuthor()))
-            throw new ServiceException("403-1", "글 삭제 권한이 없습니다.");
+            throw new ServiceException("403-1", "글 수정 권한이 없습니다.");
 
         postService.delete(post);
 
@@ -75,7 +73,7 @@ public class ApiV1PostController {
     }
 
 
-    record PostWriteReqBody(
+    public record PostWriteReqBody(
             @NotBlank
             @Size(min = 2, max = 100)
             String title,
@@ -89,11 +87,9 @@ public class ApiV1PostController {
     @Transactional
     @Operation(summary = "작성")
     public RsData<PostDto> write(
-            @Valid @RequestBody PostWriteReqBody reqBody,
-            @NotBlank @Size(min = 30, max = 50) @RequestHeader("Authorization") String authorization
+            @RequestBody @Valid PostWriteReqBody reqBody
     ) {
-        String apiKey = authorization.replace("Bearer ", "");
-        Member actor = memberService.findByApiKey(apiKey).orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 apiKey 입니다."));
+        Member actor = rq.getActor();
 
         Post post = postService.write(actor, reqBody.title, reqBody.content);
 
@@ -104,7 +100,8 @@ public class ApiV1PostController {
         );
     }
 
-    record PostModifyReqBody(
+
+    public record PostModifyReqBody(
             @NotBlank
             @Size(min = 2, max = 100)
             String title,
@@ -119,12 +116,9 @@ public class ApiV1PostController {
     @Operation(summary = "수정")
     public RsData<Void> modify(
             @PathVariable int id,
-            @Valid @RequestBody PostModifyReqBody reqBody,
-            @NotBlank @Size(min = 30, max = 50) @RequestHeader("Authorization") String authorization
+            @RequestBody @Valid PostModifyReqBody reqBody
     ) {
-        String apiKey = authorization.replace("Bearer ", "");
-        Member actor = memberService.findByApiKey(apiKey)
-                .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 apiKey 입니다."));
+        Member actor = rq.getActor();
 
         Post post = postService.findById(id).get();
 
