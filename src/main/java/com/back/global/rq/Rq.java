@@ -20,8 +20,9 @@ public class Rq {
     private final HttpServletResponse resp;
 
     public Member getActor() {
-        String headerAuthorization = getHeader("Authorization", "");
         String apiKey;
+
+        String headerAuthorization = getHeader("Authorization", "");
 
         if (!headerAuthorization.isBlank()) {
             if (!headerAuthorization.startsWith("Bearer "))
