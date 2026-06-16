@@ -1,7 +1,6 @@
 package com.back.domain.post.postComment.controller;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.member.service.MemberService;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
 import com.back.domain.post.postComment.dto.PostCommentDto;
@@ -26,7 +25,6 @@ import java.util.List;
 @Tag(name = "ApiV1PostCommentController", description = "API 댓글 컨트롤러")
 public class ApiV1PostCommentController {
     private final PostService postService;
-    private final MemberService memberService;
     private final Rq rq;
 
     @GetMapping
@@ -37,7 +35,8 @@ public class ApiV1PostCommentController {
     ) {
         Post post = postService.findById(postId).get();
 
-        return post.getComments()
+        return post
+                .getComments()
                 .stream()
                 .map(PostCommentDto::new)
                 .toList();
@@ -51,6 +50,7 @@ public class ApiV1PostCommentController {
             @PathVariable int id
     ) {
         Post post = postService.findById(postId).get();
+
         PostComment postComment = post.findCommentById(id).get();
 
         return new PostCommentDto(postComment);
@@ -66,21 +66,21 @@ public class ApiV1PostCommentController {
         Member actor = rq.getActor();
 
         Post post = postService.findById(postId).get();
+
         PostComment postComment = post.findCommentById(id).get();
 
-        if (!actor.equals(postComment.getAuthor()))
-            throw new ServiceException("403-1", "댓글 삭제 권한이 없습니다.");
+        postComment.checkActorCanDelete(actor);
 
         postService.deleteComment(post, postComment);
 
         return new RsData<>(
                 "200-1",
-                "%d번 댓글이 삭제되었습니다.".formatted(postComment.getId())
+                "%d번 댓글이 삭제되었습니다.".formatted(id)
         );
     }
 
 
-    public record PostCommentModifyReqBody(
+    record PostCommentModifyReqBody(
             @NotBlank
             @Size(min = 2, max = 100)
             String content
@@ -93,11 +93,12 @@ public class ApiV1PostCommentController {
     public RsData<Void> modify(
             @PathVariable int postId,
             @PathVariable int id,
-            @RequestBody @Valid PostCommentModifyReqBody reqBody
+            @Valid @RequestBody PostCommentModifyReqBody reqBody
     ) {
         Member actor = rq.getActor();
 
         Post post = postService.findById(postId).get();
+
         PostComment postComment = post.findCommentById(id).get();
 
         if (!actor.equals(postComment.getAuthor()))
@@ -107,12 +108,12 @@ public class ApiV1PostCommentController {
 
         return new RsData<>(
                 "200-1",
-                "%d번 댓글이 수정되었습니다.".formatted(postComment.getId())
+                "%d번 댓글이 수정되었습니다.".formatted(id)
         );
     }
 
 
-    public record PostCommentWriteReqBody(
+    record PostCommentWriteReqBody(
             @NotBlank
             @Size(min = 2, max = 100)
             String content
@@ -127,11 +128,11 @@ public class ApiV1PostCommentController {
             @Valid @RequestBody PostCommentWriteReqBody reqBody
     ) {
         Member actor = rq.getActor();
-
         Post post = postService.findById(postId).get();
 
         PostComment postComment = postService.writeComment(actor, post, reqBody.content);
 
+        // 트랜잭션 끝난 후 수행되어야 하는 더티체킹 및 여러가지 작업들을 지금 당장 수행해라.
         postService.flush();
 
         return new RsData<>(
