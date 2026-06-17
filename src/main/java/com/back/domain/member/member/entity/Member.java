@@ -17,7 +17,7 @@ public class Member extends BaseEntity {
     private String password;
     private String nickname;
     @Column(unique = true)
-    private String apiKey; // UUID
+    private String apiKey;
 
     public Member(String username, String password, String nickname) {
         this.username = username;
@@ -28,5 +28,9 @@ public class Member extends BaseEntity {
 
     public String getName() {
         return nickname;
+    }
+
+    public void modifyApiKey(String apiKey) {
+        this.apiKey = apiKey;
     }
 }
