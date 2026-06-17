@@ -9,6 +9,9 @@ spring:
   datasource:
     hikari:
       auto-commit: false
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
   jpa:
     show-sql: true
     hibernate:
@@ -25,3 +28,8 @@ logging:
     org.hibernate.orm.jdbc.bind: TRACE
     org.hibernate.orm.jdbc.extract: TRACE
     org.springframework.transaction.interceptor: TRACE
+custom:
+  jwt:
+    secretKey: abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789
+  accessToken:
+    expirationSeconds: "#{60*20}"
