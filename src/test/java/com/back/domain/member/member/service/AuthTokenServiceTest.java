@@ -31,11 +31,11 @@ public class AuthTokenServiceTest {
     @Autowired
     private AuthTokenService authTokenService;
 
-    @Value("${custom.jwt.secretKey}")
-    private String jwtSecretKey;
-
     @Value("${custom.accessToken.expirationSeconds}")
-    private int accessTokenExpirationSeconds;
+    private int expireSeconds;
+
+    @Value("${custom.jwt.secretKey}")
+    private String secret;
 
     @Test
     @DisplayName("authTokenService 서비스가 존재한다.")
@@ -44,12 +44,12 @@ public class AuthTokenServiceTest {
     }
 
     @Test
-    @DisplayName("jjwt 최신 방식으로 JWT 생성, {name=\"Paul\", age=23}")
+    @DisplayName("jjwt 최신 방식으로 JWT 생성, {name=\"Paul\", age=23}, 그리고 payload 추출")
     void t2() {
         // 토큰 만료기간: 1년
-        long expireMillis = 1000L * accessTokenExpirationSeconds;
+        long expireMillis = 1000L * expireSeconds;
 
-        byte[] keyBytes = jwtSecretKey.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         SecretKey secretKey = Keys.hmacShaKeyFor(keyBytes);
 
         // 발행 시간과 만료 시간 설정
@@ -70,8 +70,6 @@ public class AuthTokenServiceTest {
 
         assertThat(jwt).isNotBlank();
 
-        System.out.println("jwt = " + jwt);
-
         // 키가 유효한지 테스트
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
@@ -86,30 +84,30 @@ public class AuthTokenServiceTest {
     }
 
     @Test
-    @DisplayName("Ut.jwt.toString 를 통해서 JWT 생성, {name=\"Paul\", age=23}")
+    @DisplayName("Ut.jwt.toString 를 통해서 JWT 생성, {name=\"Paul\", age=23}, 그리고 jwt 유효성 체크, 그리고 payload 추출")
     void t3() {
         Map<String, Object> payload = Map.of("name", "Paul", "age", 23);
 
         String jwt = Ut.jwt.toString(
-                jwtSecretKey,
-                accessTokenExpirationSeconds,
+                secret,
+                expireSeconds,
                 payload
         );
 
         assertThat(jwt).isNotBlank();
 
         assertThat(
-                Ut.jwt.isValid(jwtSecretKey, jwt)
+                Ut.jwt.isValid(secret, jwt)
         )
                 .isTrue();
 
-        Map<String, Object> parsedPayload = Ut.jwt.payload(jwtSecretKey, jwt);
+        Map<String, Object> parsedPayload = Ut.jwt.payload(secret, jwt);
 
         assertThat(parsedPayload).containsAllEntriesOf(payload);
     }
 
     @Test
-    @DisplayName("authTokenService.genAccessToken(member);")
+    @DisplayName("authTokenService.genAccessToken(member); authTokenService.payload(accessToken);")
     void t4() {
         Member memberUser1 = memberService.findByUsername("user1").get();
 
