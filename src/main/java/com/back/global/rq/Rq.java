@@ -71,11 +71,16 @@ public class Rq {
     }
 
     private String getCookieValue(String name, String defaultValue) {
-        return Arrays.stream(Optional.ofNullable(req.getCookies()).orElse(new Cookie[0]))
-                .filter(cookie -> name.equals(cookie.getName()))
-                .map(Cookie::getValue)
-                .filter(value -> value != null && !value.isBlank())
-                .findFirst()
+        return Optional
+                .ofNullable(req.getCookies())
+                .flatMap(
+                        cookies ->
+                                Arrays.stream(cookies)
+                                        .filter(cookie -> cookie.getName().equals(name))
+                                        .map(Cookie::getValue)
+                                        .filter(value -> !value.isBlank())
+                                        .findFirst()
+                )
                 .orElse(defaultValue);
     }
 
