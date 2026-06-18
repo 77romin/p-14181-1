@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,7 +27,7 @@ public class ApiV1MemberController {
     private final Rq rq;
 
 
-    record MemberJoinReqBody(
+    public record MemberJoinReqBody(
             @NotBlank
             @Size(min = 2, max = 30)
             String username,
@@ -40,8 +41,9 @@ public class ApiV1MemberController {
     }
 
     @PostMapping
+    @Transactional
     public RsData<MemberDto> join(
-            @Valid @RequestBody MemberJoinReqBody reqBody
+            @RequestBody @Valid MemberJoinReqBody reqBody
     ) {
         Member member = memberService.join(
                 reqBody.username(),
@@ -57,7 +59,7 @@ public class ApiV1MemberController {
     }
 
 
-    record MemberLoginReqBody(
+    public record MemberLoginReqBody(
             @NotBlank
             @Size(min = 2, max = 30)
             String username,
@@ -67,7 +69,7 @@ public class ApiV1MemberController {
     ) {
     }
 
-    record MemberLoginResBody(
+    public record MemberLoginResBody(
             MemberDto item,
             String apiKey,
             String accessToken
@@ -76,7 +78,7 @@ public class ApiV1MemberController {
 
     @PostMapping("/login")
     public RsData<MemberLoginResBody> login(
-            @Valid @RequestBody MemberLoginReqBody reqBody
+            @RequestBody @Valid MemberLoginReqBody reqBody
     ) {
         Member member = memberService.findByUsername(reqBody.username())
                 .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 아이디입니다."));
@@ -115,9 +117,7 @@ public class ApiV1MemberController {
 
     @GetMapping("/me")
     public MemberWithUsernameDto me() {
-        Member actor = memberService
-                .findById(rq.getActor().getId())
-                .get();
+        Member actor = memberService.findById(rq.getActor().getId()).get();
 
         return new MemberWithUsernameDto(actor);
     }
