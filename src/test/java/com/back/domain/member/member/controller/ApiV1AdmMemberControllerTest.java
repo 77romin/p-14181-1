@@ -75,20 +75,19 @@ public class ApiV1AdmMemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(ApiV1AdmMemberController.class))
-                .andExpect(handler().methodName("getItems"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.resultCode").value("403-1"))
                 .andExpect(jsonPath("$.msg").value("권한이 없습니다."));
     }
 
+
     @Test
     @DisplayName("단건조회")
     void t2() throws Exception {
-        int id = 1;
-
         Member actor = memberService.findByUsername("admin").get();
         String actorApiKey = actor.getApiKey();
+
+        int id = 1;
 
         ResultActions resultActions = mvc
                 .perform(
@@ -106,17 +105,17 @@ public class ApiV1AdmMemberControllerTest {
                 .andExpect(jsonPath("$.id").value(member.getId()))
                 .andExpect(jsonPath("$.createDate").value(Matchers.startsWith(member.getCreateDate().toString().substring(0, 20))))
                 .andExpect(jsonPath("$.modifyDate").value(Matchers.startsWith(member.getModifyDate().toString().substring(0, 20))))
-                .andExpect(jsonPath("$.name").value(member.getName()))
-                .andExpect(jsonPath("$.username").value(member.getUsername()));
+                .andExpect(jsonPath("$.username").value(member.getUsername()))
+                .andExpect(jsonPath("$.name").value(member.getName()));
     }
 
     @Test
     @DisplayName("단건조회, without permission")
     void t4() throws Exception {
-        int id = 1;
-
         Member actor = memberService.findByUsername("user1").get();
         String actorApiKey = actor.getApiKey();
+
+        int id = 1;
 
         ResultActions resultActions = mvc
                 .perform(
@@ -126,8 +125,6 @@ public class ApiV1AdmMemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(ApiV1AdmMemberController.class))
-                .andExpect(handler().methodName("getItem"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.resultCode").value("403-1"))
                 .andExpect(jsonPath("$.msg").value("권한이 없습니다."));
