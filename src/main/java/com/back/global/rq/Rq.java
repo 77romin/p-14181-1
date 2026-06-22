@@ -53,6 +53,7 @@ public class Rq {
                 int id = (int) payload.get("id");
                 String username = (String) payload.get("username");
                 String name = (String) payload.get("name");
+
                 member = new Member(id, username, name);
 
                 isAccessTokenValid = true;
@@ -75,7 +76,7 @@ public class Rq {
         return member;
     }
 
-    private String getHeader(String name, String defaultValue) {
+    public String getHeader(String name, String defaultValue) {
         return Optional
                 .ofNullable(req.getHeader(name))
                 .filter(headerValue -> !headerValue.isBlank())
@@ -92,17 +93,12 @@ public class Rq {
         }
     }
 
-    private String getCookieValue(String name, String defaultValue) {
-        return Optional
-                .ofNullable(req.getCookies())
-                .flatMap(
-                        cookies ->
-                                Arrays.stream(cookies)
-                                        .filter(cookie -> cookie.getName().equals(name))
-                                        .map(Cookie::getValue)
-                                        .filter(value -> !value.isBlank())
-                                        .findFirst()
-                )
+    public String getCookieValue(String name, String defaultValue) {
+        return Arrays.stream(Optional.ofNullable(req.getCookies()).orElse(new Cookie[0]))
+                .filter(cookie -> name.equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .filter(value -> value != null && !value.isBlank())
+                .findFirst()
                 .orElse(defaultValue);
     }
 
