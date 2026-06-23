@@ -15,7 +15,6 @@ public class SecurityUser extends User {
             int id,
             String username,
             String password,
-            String name,
             Collection<? extends GrantedAuthority> authorities
     ) {
         super(username, password, authorities);
