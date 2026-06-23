@@ -47,9 +47,11 @@ public class SecurityConfig {
                                         HeadersConfigurer.FrameOptionsConfig::sameOrigin
                                 )
                 )
-                .csrf(
-                        AbstractHttpConfigurer::disable
-                )
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .sessionManagement(AbstractHttpConfigurer::disable)
                 .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(
                         exceptionHandling -> exceptionHandling
@@ -59,11 +61,10 @@ public class SecurityConfig {
 
                                             response.setStatus(401);
                                             response.getWriter().write(
-                                                    Ut.json.toString((
-                                                                    new RsData<Void>(
-                                                                            "401-1",
-                                                                            "로그인 후 이용해주세요."
-                                                                    )
+                                                    Ut.json.toString(
+                                                            new RsData<Void>(
+                                                                    "401-1",
+                                                                    "로그인 후 이용해주세요."
                                                             )
                                                     )
                                             );
@@ -85,7 +86,6 @@ public class SecurityConfig {
                                         }
                                 )
                 );
-
 
         return http.build();
     }
